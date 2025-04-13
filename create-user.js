@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 
 // Replace with your MongoDB connection string
 const uri = "mongodb+srv://ademburak:kuz60TOL12@test.rrk5it5.mongodb.net/?retryWrites=true&w=majority&appName=Test";
