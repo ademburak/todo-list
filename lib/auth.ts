@@ -18,39 +18,51 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
+          console.log("Attempting database connection...")
           const { db } = await connectToDatabase()
+          console.log("Database connection successful")
+
+          console.log("Looking up user:", credentials.username)
           const user = await db.collection("users").findOne({
             username: credentials.username,
           })
 
           if (!user) {
-            console.error("User not found")
+            console.error("User not found:", credentials.username)
             return null
           }
 
+          console.log("Verifying password...")
           const isPasswordValid = await compare(credentials.password, user.password)
           if (!isPasswordValid) {
-            console.error("Invalid password")
+            console.error("Invalid password for user:", credentials.username)
             return null
           }
 
+          console.log("Authentication successful for user:", credentials.username)
           return {
             id: user._id.toString(),
             name: user.username,
             email: user.email || "",
           }
         } catch (error) {
-          console.error("Authentication error:", error)
-          return null
+          console.error("Authentication error:", {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            credentials: { username: credentials?.username }
+          })
+          throw error // Let NextAuth handle the error
         }
       },
     }),
   ],
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   pages: {
     signIn: "/login",
+    error: "/login?error=true",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -66,5 +78,5 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // Enable debug logs
 }
