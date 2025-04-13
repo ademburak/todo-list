@@ -12,12 +12,22 @@ export async function connectToDatabase() {
     throw new Error("Please define the MONGODB_URI environment variable")
   }
 
-  const client = new MongoClient(process.env.MONGODB_URI)
-  await client.connect()
-  const db = client.db(process.env.MONGODB_DB || "list-manager")
+  const client = new MongoClient(process.env.MONGODB_URI, {
+    connectTimeoutMS: 10000, // 10 seconds
+    socketTimeoutMS: 10000,
+    serverSelectionTimeoutMS: 10000,
+  })
+  
+  try {
+    await client.connect()
+    const db = client.db(process.env.MONGODB_DB || "list-manager")
 
-  cachedClient = client
-  cachedDb = db
+    cachedClient = client
+    cachedDb = db
 
-  return { client, db }
+    return { client, db }
+  } catch (error) {
+    console.error("MongoDB connection error:", error)
+    throw error
+  }
 }
